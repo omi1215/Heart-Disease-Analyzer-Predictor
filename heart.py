@@ -299,14 +299,14 @@ class Ui_Dialog(object):
         self.Thalach_button.setText(_translate("Dialog", "Thalach"))
         self.OldPeak_button.setText(_translate("Dialog", "Old Peak"))
         self.Conf_int_button.setText(_translate("Dialog", "Confidence Interval"))
-        self.label.setText(_translate("Dialog", "    Mean"))
-        self.label_2.setText(_translate("Dialog", "   Median"))
-        self.label_3.setText(_translate("Dialog", "     S.D"))
+        self.label.setText(_translate("Dialog", "   Mean "))
+        self.label_2.setText(_translate("Dialog", "  Median  "))
+        self.label_3.setText(_translate("Dialog", "    S.D  "))
         self.back_2.setText(_translate("Dialog", "<"))
         self.next_2.setText(_translate("Dialog", ">"))
         self.pred_button.setText(_translate("Dialog", "Prediction"))
-        self.input2.setText(_translate("Dialog", "Input 2"))
-        self.input1.setText(_translate("Dialog", "Input 1"))
+        self.input2.setText(_translate("Dialog", "Thalach"))
+        self.input1.setText(_translate("Dialog", "Cholestrol"))
         self.back_3.setText(_translate("Dialog", "<"))
         self.next_3.setText(_translate("Dialog", ">"))
     def homePage(self):
@@ -326,7 +326,7 @@ class Ui_Dialog(object):
         interval_width = (max_chol - min_chol) / num_intervals
         intervals = [min_chol + i * interval_width for i in range(num_intervals)]
         intervals.append(max_chol)
-        plt.hist(chol_col, bins=intervals, edgecolor='black',color='b')
+        plt.hist(chol_col, bins=intervals, edgecolor='black',color='red')
         plt.xlabel(' cholestoral (mg/dl)')
         plt.ylabel('Persons')
         plt.title('Cholestrol Level in Patients')
@@ -517,17 +517,23 @@ class Ui_Dialog(object):
         male_age_avg =round( np.mean(male_data['age']),5)
         female_age_avg = round(np.mean(female_data['age']),5)
         oa_chol = round(np.mean(self.data['chol']),5)  
+        oa_thalach=round(np.mean(self.data['thalach']),5)
+        od_oldpeak=round(np.mean(self.data['oldpeak']),5)
         fbs_count = pd.Series(self.data['fbs'])[1]
         trg_count = pd.Series(self.data['target'])[1]
         male_var=round(np.var(male_data['age']),5)
         female_var=round(np.var(female_data['age']),5)
         oa_chol_var=round(np.var(self.data['chol']),2)
+        oa_thalach_var=round(np.var(self.data['thalach']),5)
+        od_oldpeak_var=round(np.var(self.data['oldpeak']),5)
         male_sd=round(np.sqrt(male_var),5)
         female_sd=round(np.sqrt(female_var),5)
         oa_chol_sd=round(np.sqrt(oa_chol_var),5)
-        mean_label=QLabel(f"Male Age Average : ${male_age_avg} \nFemale Age Average : ${female_age_avg}\nAverage Cholestrol Level : ${oa_chol} ")
-        var_label=QLabel(f"Male Age Variance : ${male_var} \nFemale Age Variance : ${female_var}\nVariance Cholestrol Level : ${oa_chol_var} ")
-        sd_label=QLabel(f"Male Age SD : ${male_sd} \nFemale Age SD : ${female_sd}\nVariance Cholestrol SD : ${oa_chol_sd} ")
+        oa_thalach_sd=round(np.sqrt(oa_thalach_var),5)
+        oa_oldpeak_sd=round(np.sqrt(od_oldpeak_var),5)
+        mean_label=QLabel(f"Male Age Average : {male_age_avg} \nFemale Age Average : {female_age_avg}\nAverage Cholestrol Level : {oa_chol}\n Average Thalach : {oa_thalach} \nAverage Oldpeak : {od_oldpeak}")
+        var_label=QLabel(f"Male Age Variance : {male_var} \nFemale Age Variance : {female_var}\nVariance Cholestrol Level : {oa_chol_var}\nVariance Thalach : {oa_thalach_var} \nVariance Oldpeak : {od_oldpeak_var} ")
+        sd_label=QLabel(f"Male Age SD : {male_sd} \nFemale Age SD : {female_sd}\nCholestrol SD : {oa_chol_sd}\nThalach SD : {oa_thalach_sd} \nOldpeak SD : {oa_oldpeak_sd} ")
         layout=QtWidgets.QVBoxLayout(self.Mean_frame)
         layout.addWidget(mean_label)
         layout1=QtWidgets.QVBoxLayout(self.Median_frame)
@@ -536,50 +542,51 @@ class Ui_Dialog(object):
         layout2.addWidget(sd_label)
     def regressionFun(self):
         try:
-                # Load data from Excel file
+            # Load data from Excel file
 
-                # Split data into independent (X) and dependent (y) variables
-                X = self.data[['chol', 'thalach']]  # Use 'chol' and 'thalach' as independent variables
-                y = self.data['target']
+            # Split data into independent (X) and dependent (y) variables
+            X = self.data[['chol', 'thalach']]  # Use 'chol' and 'thalach' as independent variables
+            y = self.data['target']
 
-                # Add constant term for intercept
-                X = sm.add_constant(X)
+            # Add constant term for intercept
+            X = sm.add_constant(X)
 
-                # Train the model
-                model = sm.OLS(y, X).fit()
+            # Train the model
+            model = sm.OLS(y, X).fit()
 
-                # Prompt user for input
-                chol=200.0
-                thalach=150.0
-                chol = self.input1_input.text()
-                thalach = self.input2_input.text()
-                if chol.isdigit() and thalach.isdigit():
-                        chol=float(chol)
-                        thalach=float(thalach)
-                        # Make prediction
-                        user_input = np.array([[1, chol, thalach]])  # Adding constant term manually
-                        prediction = model.predict(user_input)
-                        
-                        # Display prediction and model summary
-                        prediction_text = f"Predicted likelihood of heart disease: {prediction[0]} \n\nModel Summary:\n{model.summary()}"
-                        prediction_label = QtWidgets.QLabel(prediction_text)       
-                else:
-                   prediction_label = QtWidgets.QLabel("enter float values")
-                 # Create a scroll area
-                scroll_area = QScrollArea()
-                scroll_area.setWidgetResizable(True)
-                scroll_area.setWidget(prediction_label)
+            # Prompt user for input
+            chol_input = self.input1_input.text()
+            thalach_input = self.input2_input.text()
 
-                # Add the scroll area to the layout
-                layout = QtWidgets.QHBoxLayout(self.pred_frame)
-                
-                layout.addWidget(scroll_area)
-                     
+            if chol_input.isdigit() and thalach_input.isdigit():
+                chol = float(chol_input)
+                thalach = float(thalach_input)
+                # Make prediction
+                user_input = np.array([[1, chol, thalach]])  # Adding constant term manually
+                prediction = model.predict(user_input)
+
+                # Display prediction and model summary
+                prediction_text = f"Predicted likelihood of heart disease: {prediction[0]} \n\nModel Summary:\n{model.summary()}"
+                prediction_label = QtWidgets.QLabel(prediction_text)
+            else:
+                prediction_label = QtWidgets.QLabel("Enter float values")
+
+            # Create a scroll area
+            scroll_area = QtWidgets.QScrollArea()
+            scroll_area.setWidgetResizable(True)
+            scroll_area.setWidget(prediction_label)
+
+            # Clear previous layout
+            self.pred_frame.setLayout(QtWidgets.QHBoxLayout())
+
+            # Add the scroll area to the layout
+            self.pred_frame.layout().addWidget(scroll_area)
 
         except Exception as e:
-                err_label=QLabel("Some error Occured!!!")
-                layout=QtWidgets.QHBoxLayout(self.pred_frame)
-                layout.addWidget(err_label)
+            err_label = QtWidgets.QLabel("Some error Occurred!!!")
+            # Clear previous layout
+            self.pred_frame.setLayout(QtWidgets.QHBoxLayout())
+            self.pred_frame.layout().addWidget(err_label)
 
 
 
